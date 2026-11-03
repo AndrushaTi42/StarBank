@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="1" author="student">
+        <createTable tableName="dynamic_rules">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="rule_queries">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="rule_id" type="BIGINT">
+                <constraints foreignKeyName="fk_rule" references="dynamic_rules(id)"/>
+            </column>
+            <column name="query" type="VARCHAR(100)"/>
+            <column name="negate" type="BOOLEAN"/>
+        </createTable>
+
+        <createTable tableName="query_arguments">
+            <column name="query_id" type="BIGINT">
+                <constraints foreignKeyName="fk_query" references="rule_queries(id)"/>
+            </column>
+            <column name="argument" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
