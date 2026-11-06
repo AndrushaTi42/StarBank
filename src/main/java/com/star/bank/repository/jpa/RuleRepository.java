@@ -1,4 +1,4 @@
-package com.star.bank.repository;
+package com.star.bank.repository.jpa;
 
 import com.star.bank.entity.RuleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

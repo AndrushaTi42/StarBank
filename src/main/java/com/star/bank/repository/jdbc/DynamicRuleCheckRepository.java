@@ -1,4 +1,4 @@
-package com.star.bank.repository;
+package com.star.bank.repository.jdbc;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -77,5 +77,10 @@ public class DynamicRuleCheckRepository {
                     rs.getLong("withdraw")
             }, userId, productType);
         });
+    }
+    public void clearAllCaches() {
+        userOfCache.invalidateAll();
+        sumCompareCache.invalidateAll();
+        depositWithdrawCache.invalidateAll();
     }
 }

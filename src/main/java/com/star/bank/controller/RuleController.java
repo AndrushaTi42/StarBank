@@ -2,9 +2,12 @@ package com.star.bank.controller;
 
 import com.star.bank.dto.QueryDto;
 import com.star.bank.dto.RuleDto;
+import com.star.bank.dto.RuleStatDto;
 import com.star.bank.entity.QueryEntity;
 import com.star.bank.entity.RuleEntity;
-import com.star.bank.repository.RuleRepository;
+import com.star.bank.entity.RuleStatEntity;
+import com.star.bank.repository.jpa.RuleRepository;
+import com.star.bank.repository.jpa.RuleStatRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +20,12 @@ import java.util.stream.Collectors;
 public class RuleController {
 
     private final RuleRepository ruleRepository;
+    private final RuleStatRepository statRepository;
 
-    public RuleController(RuleRepository ruleRepository) {
+    public RuleController(RuleRepository ruleRepository,
+                          RuleStatRepository statRepository) {
         this.ruleRepository = ruleRepository;
+        this.statRepository = statRepository;
     }
 
     // 1. POST: Создание правила
@@ -50,6 +56,21 @@ public class RuleController {
         ruleRepository.deleteById(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, List<RuleStatDto>>> getStats() {
+        List<RuleEntity> allRules = ruleRepository.findAll();
+
+        List<RuleStatDto> stats = allRules.stream().map(rule -> {
+            // Если статистики нет, возвращаем 0
+            long count = statRepository.findByRuleId(rule.getId())
+                    .map(RuleStatEntity::getHitCount)
+                    .orElse(0L);
+            return new RuleStatDto(rule.getId(), count);
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(Map.of("stats", stats));
     }
 
     // ==========================================

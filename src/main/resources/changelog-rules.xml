@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <changeSet id="1" author="student">
+    <changeSet id="1" author="andrey">
         <createTable tableName="dynamic_rules">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true"/>
@@ -38,6 +38,29 @@
             </column>
             <column name="argument" type="VARCHAR(100)"/>
         </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="andrey">
+        <createTable tableName="rule_stats">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="rule_id" type="BIGINT">
+                <!-- Каскадное удаление: если удалим правило, статистика удалится сама -->
+                <constraints nullable="false" unique="true"
+                             foreignKeyName="fk_stat_rule"
+                             referencedTableName="dynamic_rules"
+                             referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+            <column name="count" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="andrey">
+        <renameColumn tableName="rule_stats" oldColumnName="count" newColumnName="hit_count" columnDataType="BIGINT"/>
     </changeSet>
 
 </databaseChangeLog>

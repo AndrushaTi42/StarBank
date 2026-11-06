@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -21,7 +22,7 @@ import java.util.Map;
 
 @Configuration
 @EnableJpaRepositories(
-        basePackages = "com.star.bank.repository", // Пакет, где будет лежать RuleRepository
+        basePackages = "com.star.bank.repository.jpa", // Пакет, где будет лежать RuleRepository
         entityManagerFactoryRef = "rulesEntityManagerFactory",
         transactionManagerRef = "rulesTransactionManager"
 )
@@ -78,5 +79,12 @@ public class DataSourceConfig {
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog("classpath:changelog-rules.xml");
         return liquibase;
+    }
+
+    // === 4. Явно указываем JdbcTemplate, какую базу использовать ===
+    @Bean
+    public JdbcTemplate jdbcTemplate(
+            @Qualifier("defaultDataSource") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
     }
 }

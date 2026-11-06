@@ -5,9 +5,11 @@ import com.star.bank.dto.UserRecommendationsDto;
 import com.star.bank.dto.UserStats;
 import com.star.bank.entity.QueryEntity; // Проверь путь!
 import com.star.bank.entity.RuleEntity;  // Проверь путь!
-import com.star.bank.repository.DynamicRuleCheckRepository;
-import com.star.bank.repository.RecommendationRepository;
-import com.star.bank.repository.RuleRepository;
+import com.star.bank.entity.RuleStatEntity;
+import com.star.bank.repository.jdbc.DynamicRuleCheckRepository;
+import com.star.bank.repository.jdbc.RecommendationRepository;
+import com.star.bank.repository.jpa.RuleRepository;
+import com.star.bank.repository.jpa.RuleStatRepository;
 import com.star.bank.rules.RecommendationRuleSet;
 import org.springframework.stereotype.Service;
 
@@ -21,17 +23,22 @@ public class RecommendationService {
 
     private final RecommendationRepository oldRepository;
     private final DynamicRuleCheckRepository dynamicCheckRepository;
-    private final RuleRepository ruleRepository; // Должен быть RuleRepository!
+    private final RuleRepository ruleRepository;
     private final List<RecommendationRuleSet> fixedRuleSets;
+    private final RuleStatRepository statRepository;
+
 
     public RecommendationService(RecommendationRepository oldRepository,
                                  DynamicRuleCheckRepository dynamicCheckRepository,
-                                 RuleRepository ruleRepository, // Исправлено
-                                 List<RecommendationRuleSet> fixedRuleSets) {
+                                 RuleRepository ruleRepository,
+                                 List<RecommendationRuleSet> fixedRuleSets,
+                                 RuleStatRepository statRepository
+    ) {
         this.oldRepository = oldRepository;
         this.dynamicCheckRepository = dynamicCheckRepository;
-        this.ruleRepository = ruleRepository; // Исправлено
+        this.ruleRepository = ruleRepository;
         this.fixedRuleSets = fixedRuleSets;
+        this.statRepository = statRepository;
     }
 
     public UserRecommendationsDto getRecommendations(UUID userId) {
@@ -41,7 +48,7 @@ public class RecommendationService {
 
         List<RecommendationDto> recommendations = new ArrayList<>();
 
-        // 1. Проверяем СТАРЫЕ фиксированные правила (как было в 1-м этапе)
+        // 1. фиксированные правила
         UserStats stats = oldRepository.getUserStats(userId);
         fixedRuleSets.stream()
                 .map(rule -> rule.check(userId, stats))
@@ -49,10 +56,17 @@ public class RecommendationService {
                 .map(Optional::get)
                 .forEach(recommendations::add);
 
-        // 2. Проверяем НОВЫЕ динамические правила из БД
+        // 2. динамические правила из БД
         List<RuleEntity> dynamicRules = ruleRepository.findAll();
         for (RuleEntity rule : dynamicRules) {
             if (evaluateRule(rule, userId)) {
+                if (statRepository.findByRuleId(rule.getId()).isEmpty()) {
+                    RuleStatEntity newStat = new RuleStatEntity();
+                    newStat.setRule(rule);
+                    newStat.setHitCount(0L);
+                    statRepository.save(newStat);
+                }
+                statRepository.incrementCount(rule.getId());
                 recommendations.add(new RecommendationDto(
                         rule.getProductId(),
                         rule.getProductName(),
@@ -60,8 +74,11 @@ public class RecommendationService {
                 ));
             }
         }
+        List<RecommendationDto> uniqueRecommendations = recommendations.stream()
+                .distinct()
+                .toList();
 
-        return new UserRecommendationsDto(userId, recommendations);
+        return new UserRecommendationsDto(userId, uniqueRecommendations);
     }
 
     private boolean evaluateRule(RuleEntity rule, UUID userId) {
