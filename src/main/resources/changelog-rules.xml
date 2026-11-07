@@ -46,7 +46,6 @@
                 <constraints primaryKey="true"/>
             </column>
             <column name="rule_id" type="BIGINT">
-                <!-- Каскадное удаление: если удалим правило, статистика удалится сама -->
                 <constraints nullable="false" unique="true"
                              foreignKeyName="fk_stat_rule"
                              referencedTableName="dynamic_rules"
