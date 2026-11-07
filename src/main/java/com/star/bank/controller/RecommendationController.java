@@ -19,6 +19,14 @@ public class RecommendationController {
         this.service = service;
     }
 
+    /**
+     * Получает список персональных рекомендаций для пользователя.
+     * Включает в себя как статические, так и динамические правила из БД.
+     *
+     * @param userId уникальный идентификатор пользователя (UUID)
+     * @return HTTP-ответ со списком рекомендованных продуктов
+     * @throws IllegalArgumentException если пользователь с таким ID не найден (обрабатывается GlobalExceptionHandler)
+     */
     @GetMapping("/{userId}")
     public ResponseEntity<UserRecommendationsDto> getRecommendations(@PathVariable UUID userId) {
         return ResponseEntity.ok(service.getRecommendations(userId));

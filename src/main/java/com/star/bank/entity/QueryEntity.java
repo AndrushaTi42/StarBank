@@ -20,7 +20,8 @@ import java.util.List;
 @Setter
 @Table(name = "rule_queries")
 public class QueryEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String query;
     private boolean negate;

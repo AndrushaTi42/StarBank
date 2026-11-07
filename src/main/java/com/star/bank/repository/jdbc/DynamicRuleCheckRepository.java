@@ -35,11 +35,11 @@ public class DynamicRuleCheckRepository {
         String cacheKey = userId + "_" + productType + "_" + active;
         return Boolean.TRUE.equals(userOfCache.get(cacheKey, k -> {
             String sql = """
-            SELECT COUNT(t.id) 
-            FROM TRANSACTIONS t 
-            JOIN PRODUCTS p ON t.PRODUCT_ID = p.ID 
-            WHERE t.USER_ID = ? AND p.TYPE = ?
-        """;
+                        SELECT COUNT(t.id) 
+                        FROM TRANSACTIONS t 
+                        JOIN PRODUCTS p ON t.PRODUCT_ID = p.ID 
+                        WHERE t.USER_ID = ? AND p.TYPE = ?
+                    """;
             Long count = jdbcTemplate.queryForObject(sql, Long.class, userId, productType);
             if (count == null) return false;
             return active ? (count >= 5) : (count > 0);
@@ -78,6 +78,7 @@ public class DynamicRuleCheckRepository {
             }, userId, productType);
         });
     }
+
     public void clearAllCaches() {
         userOfCache.invalidateAll();
         sumCompareCache.invalidateAll();

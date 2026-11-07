@@ -7,4 +7,5 @@ public record UserStats(
         int debitCount,
         int creditCount,
         int investCount
-) {}
+) {
+}

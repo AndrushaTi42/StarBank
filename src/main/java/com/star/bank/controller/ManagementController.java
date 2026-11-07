@@ -23,12 +23,23 @@ public class ManagementController {
         this.buildProperties = buildProperties;
     }
 
+    /**
+     * Очищает все кеши рекомендаций (Caffeine).
+     * Используется внешними системами при необходимости сбросить устаревшие данные.
+     *
+     * @return HTTP-ответ со статусом 200 OK
+     */
     @PostMapping("/clear-caches")
     public ResponseEntity<Void> clearCaches() {
         repository.clearAllCaches();
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Возвращает метаданные о сервисе (название и версию), извлеченные из pom.xml при сборке.
+     *
+     * @return JSON с полями "name" и "version"
+     */
     @GetMapping("/info")
     public ResponseEntity<Map<String, String>> getInfo() {
         return ResponseEntity.ok(Map.of(

@@ -28,7 +28,12 @@ public class RuleController {
         this.statRepository = statRepository;
     }
 
-    // 1. POST: Создание правила
+    /**
+     * Создает новое динамическое правило рекомендаций и сохраняет его в PostgreSQL.
+     *
+     * @param ruleDto DTO с данными о продукте и набором логических запросов (правил)
+     * @return HTTP-ответ с сохраненным правилом, включая присвоенный базой ID
+     */
     @PostMapping
     public ResponseEntity<RuleDto> createRule(@RequestBody RuleDto ruleDto) {
         RuleEntity entity = toEntity(ruleDto);
@@ -36,7 +41,11 @@ public class RuleController {
         return ResponseEntity.ok(toDto(savedEntity));
     }
 
-    // 2. GET: Получение всех правил
+    /**
+     * Возвращает список всех динамических правил, сохраненных в базе данных.
+     *
+     * @return HTTP-ответ в формате {"data": [...]} со списком всех правил
+     */
     @GetMapping
     public ResponseEntity<Map<String, List<RuleDto>>> getAllRules() {
         // 1. Достаем все сущности из БД
@@ -50,7 +59,13 @@ public class RuleController {
         return ResponseEntity.ok(Map.of("data", dtos));
     }
 
-    // 3. DELETE: Удаление правила
+    /**
+     * Удаляет динамическое правило из базы данных по его ID.
+     * Вместе с правилом каскадно удаляется статистика его срабатываний.
+     *
+     * @param id уникальный идентификатор правила
+     * @return HTTP-ответ со статусом 204 No Content
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRule(@PathVariable Long id) {
         ruleRepository.deleteById(id);
@@ -58,12 +73,17 @@ public class RuleController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Получает статистику срабатывания всех динамических правил.
+     * Правила, которые еще не срабатывали, возвращаются со значением count = 0.
+     *
+     * @return HTTP-ответ в формате {"stats": [{"rule_id": ..., "count": ...}]}
+     */
     @GetMapping("/stats")
     public ResponseEntity<Map<String, List<RuleStatDto>>> getStats() {
         List<RuleEntity> allRules = ruleRepository.findAll();
 
         List<RuleStatDto> stats = allRules.stream().map(rule -> {
-            // Если статистики нет, возвращаем 0
             long count = statRepository.findByRuleId(rule.getId())
                     .map(RuleStatEntity::getHitCount)
                     .orElse(0L);

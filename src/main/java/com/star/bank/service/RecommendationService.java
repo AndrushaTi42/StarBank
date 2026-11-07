@@ -3,8 +3,8 @@ package com.star.bank.service;
 import com.star.bank.dto.RecommendationDto;
 import com.star.bank.dto.UserRecommendationsDto;
 import com.star.bank.dto.UserStats;
-import com.star.bank.entity.QueryEntity; // Проверь путь!
-import com.star.bank.entity.RuleEntity;  // Проверь путь!
+import com.star.bank.entity.QueryEntity;
+import com.star.bank.entity.RuleEntity;
 import com.star.bank.entity.RuleStatEntity;
 import com.star.bank.repository.jdbc.DynamicRuleCheckRepository;
 import com.star.bank.repository.jdbc.RecommendationRepository;
@@ -41,13 +41,19 @@ public class RecommendationService {
         this.statRepository = statRepository;
     }
 
+    /**
+     * Формирует список рекомендаций для пользователя.
+     * Проверяет как статические, так и динамические правила из БД.
+     *
+     * @param userId уникальный идентификатор пользователя
+     * @return объект с рекомендациями
+     * @throws IllegalArgumentException если пользователь не найден
+     */
     public UserRecommendationsDto getRecommendations(UUID userId) {
         if (!oldRepository.userExists(userId)) {
             throw new IllegalArgumentException("Пользователь с ID " + userId + " не найден");
         }
-
         List<RecommendationDto> recommendations = new ArrayList<>();
-
         // 1. фиксированные правила
         UserStats stats = oldRepository.getUserStats(userId);
         fixedRuleSets.stream()
@@ -55,7 +61,6 @@ public class RecommendationService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .forEach(recommendations::add);
-
         // 2. динамические правила из БД
         List<RuleEntity> dynamicRules = ruleRepository.findAll();
         for (RuleEntity rule : dynamicRules) {
@@ -77,14 +82,13 @@ public class RecommendationService {
         List<RecommendationDto> uniqueRecommendations = recommendations.stream()
                 .distinct()
                 .toList();
-
         return new UserRecommendationsDto(userId, uniqueRecommendations);
     }
 
     private boolean evaluateRule(RuleEntity rule, UUID userId) {
         for (QueryEntity query : rule.getRule()) {
             boolean result = executeQuery(query, userId);
-            if (query.isNegate()) { // Или query.getNegate() если Lombok не используется
+            if (query.isNegate()) {
                 result = !result;
             }
             if (!result) {
@@ -96,7 +100,6 @@ public class RecommendationService {
 
     private boolean executeQuery(QueryEntity q, UUID userId) {
         List<String> args = q.getArguments();
-        // Обрати внимание: используем dynamicCheckRepository, а не oldRepository
         return switch (q.getQuery()) {
             case "USER_OF" -> dynamicCheckRepository.isUserOf(userId, args.get(0), false);
             case "ACTIVE_USER_OF" -> dynamicCheckRepository.isUserOf(userId, args.get(0), true);

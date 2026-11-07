@@ -24,9 +24,12 @@ public class RuleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "product_name") private String productName;
-    @Column(name = "product_id") private UUID productId;
-    @Column(name = "product_text") private String productText;
+    @Column(name = "product_name")
+    private String productName;
+    @Column(name = "product_id")
+    private UUID productId;
+    @Column(name = "product_text")
+    private String productText;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "rule_id")

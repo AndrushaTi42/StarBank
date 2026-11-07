@@ -61,7 +61,7 @@ public class DataSourceConfig {
         // Дополнительные свойства Hibernate
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-        properties.put("hibernate.hbm2ddl.auto", "validate"); // Таблицы создаём только через Liquibase
+        properties.put("hibernate.hbm2ddl.auto", "validate");
         em.setJpaPropertyMap(properties);
 
         return em;
